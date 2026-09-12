@@ -144,3 +144,19 @@ On the final compute cycle ($j=3$), the final MAC result is written directly int
 | Compute-active state | 1 bit |
 | Output-valid state | 1 bit |
 | Output register | 1 × 136-bit |
+
+
+
+### Timing Table
+
+| Rising Edge | Event |
+|---|---|
+| $N$ | Accept vector A; compute A, $j=0$ |
+| $N+1$ | Compute A, $j=1$ |
+| $N+2$ | Compute A, $j=2$ |
+| $N+3$ | Compute A, $j=3$; write output A |
+| $N+4$ | Transfer output A and accept vector B; compute B, $j=0$ |
+| $N+5$ | Compute B, $j=1$ |
+| $N+6$ | Compute B, $j=2$ |
+| $N+7$ | Compute B, $j=3$; write output B |
+| $N+8$ | Transfer output B and accept vector C; compute C, $j=0$ |
