@@ -40,13 +40,34 @@ vector is awaiting transfer.
 
 Matrix contents are unspecified until explicitly programmed. The matrix must be programmed before the first input vector is accepted.
 
-Matrix contents may be updated one element at a time using `matrix_we`, `matrix_addr[3:0]`, and `matrix_wdata[15:0]`. When `matrix_we` is asserted while the block is idle, the 16-bit value on `matrix_wdata` is written to the matrix element selected by `matrix_addr`.
+Matrix contents may be updated one element at a time using a valid/ready
+interface. The source drives `matrix_valid`, `matrix_addr[3:0]`, and
+`matrix_wdata[15:0]`. The block drives `matrix_ready`.
+
+`matrix_valid` indicates that the address and signed 16-bit write data
+are valid. `matrix_ready` indicates that the block can accept a matrix
+write. A write occurs on a rising clock edge when both signals are
+asserted and reset is deasserted. The value on `matrix_wdata` is written
+to the element selected by `matrix_addr`.
 
 Matrix addresses use row-major ordering, where `matrix_addr` = 4*i + j corresponds to $A_{ij}$.
 
-Matrix writes occur on a rising edge when `matrix_we` = 1 and the block is idle.
+When `matrix_valid` is asserted and `matrix_ready` is deasserted, the
+source must hold `matrix_valid`, `matrix_addr`, and `matrix_wdata`
+stable until the write is accepted, unless reset is asserted. A write
+request may therefore be presented while the block is busy; it does
+not modify the matrix until the handshake completes.
 
-`matrix_we` must only be asserted while the block is idle. Behavior is undefined if a matrix write is requested while the block is not idle.
+Matrix writes and input-vector transactions are mutually exclusive.
+An input-vector transaction takes priority: when a vector is accepted,
+`matrix_ready` is deasserted and any pending matrix write must wait.
+Otherwise, a matrix write may be accepted only while the block is idle.
+
+Each accepted handshake writes one element. To program the full 4x4
+matrix, the source supplies sixteen writes at addresses 0 through 15.
+After an accepted write, the source may present the next address and
+value while keeping `matrix_valid` asserted, or deassert `matrix_valid`
+if no further write is pending. No matrix writes occur during reset.
 
 ### Vector Bus Packing
 

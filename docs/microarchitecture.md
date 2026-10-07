@@ -49,7 +49,12 @@ When a vector is accepted, compute-active is asserted and `j` begins
 at 0. After the final computation for `j = 3`, compute-active is
 cleared.
 
-Matrix writes and input-vector transactions are mutually exclusive. While `matrix_we` is asserted, `in_ready` is deasserted.
+Matrix writes use the `matrix_valid`/`matrix_ready` handshake and are
+mutually exclusive with input-vector transactions. An input-vector
+transaction takes priority: when `in_valid` and `in_ready` are asserted,
+`matrix_ready` is deasserted. Otherwise, matrix writes may be accepted
+only when no computation is in progress and no output is pending.
+A pending `matrix_valid` request does not by itself suppress `in_ready`.
 
 ### Datapath
 
@@ -100,6 +105,12 @@ the output transaction completes.
 
 The matrix is stored as sixteen 16-bit signed registers arranged
 logically as `A[0:3][0:3]`.
+
+On a rising clock edge with reset deasserted and both `matrix_valid`
+and `matrix_ready` asserted, `matrix_wdata[15:0]` is written to
+`A[matrix_addr[3:2]][matrix_addr[1:0]]`. Each handshake updates one
+element in row-major order. While a write is waiting for readiness,
+the source holds its valid signal, address, and data stable.
 
 During compute cycle `j`, four coefficients are read in parallel:
 
